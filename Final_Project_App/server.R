@@ -85,6 +85,6 @@ shinyServer =function(input, output) {
                         list(extend = "csv", text = '<span class="glyphicon glyphicon-download-alt"></span>'))
                 ),
               class = "display"
-    )  
+               )  
   })
 }

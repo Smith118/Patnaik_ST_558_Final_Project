@@ -64,7 +64,6 @@ dashboardPage(skin="black",
                     dataTableOutput("tab", width = 1500) ,
                                    )
                             )
-                            
                           )
                   )
                 )
