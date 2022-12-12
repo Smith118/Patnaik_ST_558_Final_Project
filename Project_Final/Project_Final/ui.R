@@ -12,11 +12,13 @@ library(lubridate)
 library(caret)
 library(DT)
 library(shinyWidgets)
-library(shinyWidgets)
 library(caTools)
+library(shinyr)
 library(rpart)
 library(randomForest)
 library(Metrics)
+library(ggcorrplot)
+library(GGally)
 
 para <- 1:ncol(df1)
 names(para) <- names(df1)
@@ -113,27 +115,27 @@ dashboardPage(skin="black",
                             br(),
                             br(),
                             submitButton("Update View", icon("refresh")),
-                            dataTableOutput("tab", width = 1500) ,
+                            dataTableOutput("tab", width = 1500) 
                           )
                   ),
                   tabItem(tabName = "dataexploration",
                           fluidRow(
-                            column(5,                                      
+                            column(7,                                      
                                    box(width=15,
                                        
                                        #background="black",
                                        solidHeader=TRUE,
-                                       selectInput("ins", "Select Variable for X",
+                                       selectInput("ins", "Select Variable for X (not for Pair plot)",
                                                    c("week","day","non_urgent","urgent","typeA",
                                                      "typeB","typeC","fiscal","traffic" ,"banking1",
                                                      "banking2" ,"banking3","target"),selected='week'),
-                                       selectInput("outs", "Select Variable for Y",
+                                       selectInput("outs", "Select Variable for Y (not for Pair plot)",
                                                    c("week","day","non_urgent","urgent","typeA",
                                                      "typeB","typeC","fiscal","traffic" ,"banking1",
                                                      "banking2" ,"banking3","target"),selected='week'),
                                        
                                        selectInput("ply", "Select Type of plot",
-                                                   choices=list("Scatter"=1,"Bar"=2, selected = 1)),
+                                                   choices=list("Scatter Plot"=1,"Bar plot"=2,"Box Plot"=3,"Pair Plot"=4, selected = 1)),
                                        radioButtons("cat", label = h5("Plot Category wise?",style = "font-weight:bold"),
                                                     choices = list("No" = 1, 
                                                                    "Yes" = 2),selected=1),
@@ -147,7 +149,7 @@ dashboardPage(skin="black",
                                        plotOutput("plot1")
                                    )
                             ),
-                            column(6,
+                            column(5,
                                    box(width=10,
                                        solidHeader=TRUE,           
                                        selectInput("act", "Select Type of statistic",
@@ -185,7 +187,7 @@ dashboardPage(skin="black",
                                               tabPanel(title="Model fitting",
                                                        fixedRow(div(style = "height:10px"),
                                                                 column(4,
-                                                                       numericInput("prop", 'Select percentage',value=0, min=1,step=1),
+                                                                       numericInput("prop", 'Select percentage',value=0.7,min=0.5, max=1,step=0.1),
                                                                        selectInput("columns", "Select Variable for X",
                                                                                    c("week","day","non_urgent","urgent","typeA",
                                                                                      "typeB","typeC","fiscal","traffic" ,"banking1",
@@ -235,7 +237,7 @@ dashboardPage(skin="black",
                                                                                     verbatimTextOutput('rfsummary'),
                                                                                     br(),
                                                                                     #plotOutput("resultvimp"),
-                                                                                    plotOutput('resultrf'))),
+                                                                                    plotOutput('resultrf')))
                                                                        )))),
                                               tabPanel(title="Predictions",
                                                        fluidRow( 
@@ -244,6 +246,8 @@ dashboardPage(skin="black",
                                                        br(),
                                                        br(),
                                                        fluidRow(
+                                                         box(width=15,height=200,
+                                                         title='Basic Summary Statistics',
                                                          column(4,
                                                                 box(width=10,height=10,
                                                                     h3("Multiple Linear Regression"),
@@ -257,32 +261,35 @@ dashboardPage(skin="black",
                                                          column(4,
                                                                 box(width=10,height=10,
                                                                     h3("Random Forest"),
-                                                                    verbatimTextOutput('rfpredsummary'),
+                                                                    verbatimTextOutput('rfpredsummary')
                                                                     
                                                                 )
-                                                         )),
-                                                       br(10),  
+                                                         ))),
+                                                       br(), 
+                                                       br(),
                                                        fluidRow(
-                                                         br(10),
-                                                         br(10),
                                                          box(width=5,height=10,
-                                                             h3("Test Prediction Comparions RMSE"),
-                                                             dataTableOutput("fitrmse")   
-                                                         ) 
-                                                       )
+                                                         column(6,
+                                                             h3("Test Prediction Comparisons RMSE"),
+                                                             dataTableOutput("fitrmse")
+                                                             
+                                                         
+                                                             )#,
+                                                         #column(6,
+                                                         #       h3("Test Prediction Comparisons Data"),
+                                                         #        
+                                                          #      plotOutput("databp") 
+                                                                
+                                                         #)
+                                                         
+                                                         )
+                                                         
                                                        
+                                                         
                                                        
-                                                       
-                                                       
-                                                       
-                                                       
-                                                       
-                                              )))
+                                              ))))
                           
-                          
-                          
-                          
-                  )))
+                )))
 
 
 

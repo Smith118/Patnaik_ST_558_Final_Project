@@ -15,6 +15,8 @@ library(shinyr)
 library(rpart)
 library(randomForest)
 library(Metrics)
+library(ggcorrplot)
+library(GGally)
 # PRIOR WORKS , DATA DOWNLOAD AND FUNCTIONS
 
 df1 <-read_delim("Daily_Demand_Forecasting_Orders.csv",delim=";",
@@ -22,7 +24,7 @@ df1 <-read_delim("Daily_Demand_Forecasting_Orders.csv",delim=";",
 names(df1) <- c('week', 'day', 'non_urgent', 'urgent', 'typeA', 'typeB', 
                 'typeC', 'fiscal', 'traffic', 'banking1', 'banking2',
                 'banking3', 'target')
-
+df1<-na.omit(df1)
 #df1<-df1 %>% mutate(day1=as.factor(day))
 #df1<-df1 %>% mutate(week1=as.factor(week))
 #m<-mean(df1$target)
@@ -88,6 +90,7 @@ shinyServer <-function(input,output,session) {
                 ordering = TRUE,
                 dom = 'Bfrtip',
                 scrollX = T,
+                scrollY = T, 
                 #buttons = c('copy', 'csv', 'excel','pdf'),
                 buttons=list(list(extend = "excel", text = '<span class="glyphicon glyphicon-th"></span>'), 
                              list(extend = "csv", text = '<span class="glyphicon glyphicon-download-alt"></span>'))
@@ -98,72 +101,69 @@ shinyServer <-function(input,output,session) {
   }) 
   
   
-#output$summ<-renderDataTable ({
-#  sc<-datatable( 
-#  if (input$act==1) {
- #   if(input$filter==1) 
- #   {   
- #   }
- #   else if(input$filter==2)
- #   {
- #     v<-as.names(input$var1)
- #   df1<-df1%>% group_by(v) %>% summarise_all(mean)
-  #  }
- # }
- # else if (input$act==2) {
- #   if(input$filter==1) #totals
- #   {   
- #     summary(df1)
- #   }
-  #  else if(input$filter==2)
- #   {
- #     v<-!as.names(input$var1)
-  #    df1<-df1%>% group_by(v) %>% summarise_all(sum)
+ output$summ<-renderDataTable ({
+  sc<-datatable( 
+  if (input$act==1) {
+    if(input$filter==1) 
+    {   
+    }
+    else if(input$filter==2)
+    {
+      df1%>% group_by(input$var1) %>% summarise_all(mean)
+    }
+  }
+ else if (input$act==2) {
+    if(input$filter==1) #totals
+    {   
+      summary(df1)
+    }
+    else if(input$filter==2)
+    {
+     
+     df1%>% group_by(input$var1) %>% summarise_all(mean)
       
- #   }}
+    }}
   
-#  else if (input$act==3) {
+  else if (input$act==3) {
     
-    
- #   if(input$filter==1) #totals
- #   {   
-  #    summary(df1)
- #   }
- #   else if(input$filter==2)
-  #  {
- #      v<-as.names(input$var1)
- #     df1<-df1%>% group_by(v) %>% summarise_all(sd)
+    if(input$filter==1) #totals
+    {   
+      summary(df1)
+    }
+    else if(input$filter==2)
+    {
       
-  #   }}
- #   )  
-# 3return(sc) 
-#})  
+       df1%>% group_by(input$var1) %>% summarise_all(sd)
+      
+     }},options = list(scrollY = '300px') 
+    ) 
+ return(sc) 
+})  
   
-  
-  
-  
-   
   output$plot1 <- renderPlot({ 
     
     #req(df1,input$ply,input$ins,input$outs,input$cat,input$catvar)
-    g<-  if (input$ply==1) { #scatter
-      { if (input$cat==1) 
-      { ggplot(df1,aes_string(x =df1[[input$ins]],
-                              y = df1[[input$outs]]))+
-          geom_point(alpha=0.5)+  geom_jitter()
-      }
-        else if(input$cat==2)
-        {
-          ggplot(df1,aes_string(x =df1[[input$ins]],
-                                y = df1[[input$outs]],color=df1[[input$catvar]]))+
-            geom_point(alpha=0.5)+  geom_jitter() 
-        }
-      }
-      
-    }
-    else if(input$ply==2){ #bar
-      
-      { if (input$cat==1) 
+    g<- if (input$ply==1) 
+       #scatter
+          { 
+            if (input$cat==1) 
+          { 
+              ggplot(df1,aes_string(x =df1[[input$ins]],
+                                  y = df1[[input$outs]]))+
+              geom_point(alpha=0.5)+  geom_jitter()
+          }
+            else if(input$cat==2)
+            {
+              ggplot(df1,aes_string(x =df1[[input$ins]],
+                                    y = df1[[input$outs]],color=df1[[input$catvar]]))+
+                geom_point(alpha=0.5)+  geom_jitter() 
+            }
+          }
+          
+        
+    else if(input$ply==2) #bar
+            { 
+        if (input$cat==1) 
       {  
         ggplot(df1,aes_string(x =df1[[input$ins]],
                               y = df1[[input$outs]]))+
@@ -176,9 +176,30 @@ shinyServer <-function(input,output,session) {
             geom_bar(position='dodge',stat='identity') 
         }
       }
+    else if(input$ply==3) #box
       
-    }
-    g})
+      { 
+       if (input$cat==1) 
+        {  
+        ggplot(df1,aes_string(x =df1[[input$ins]],
+                              y = df1[[input$outs]]))+
+          geom_boxplot()
+      }
+        else if(input$cat==2)
+        {
+          ggplot(df1,aes_string(x =df1[[input$ins]],
+                                y = df1[[input$outs]],color=df1[[input$catvar]]))+
+            geom_boxplot() 
+        }
+      }
+    
+    else if(input$ply==4){ #hist
+      ggpairs(df1)
+      }
+    
+    g
+    
+    })
   
   
   
@@ -366,13 +387,35 @@ shinyServer <-function(input,output,session) {
   
   output$fitrmse<-renderDataTable({
     req(lmpred(),treepred(),rfpred(),testd()$target) 
-    datatable(data.frame("Multiple Reg "=RMSE(lmpred(), testd()$target),
+    datatable(data.frame("Metric","RMSE",
+                          "Multiple Reg "=RMSE(lmpred(), testd()$target),
                          "Regression Tree "=RMSE(treepred(), testd()$target),
                          "Random Forest "=RMSE(rfpred(), testd()$target)))
+   
+     })
+  
+  
+  
+ # output$datab<-renderDataTable({
+ #   req(testd,l,pred(),treepred(),rfpred())
+ #   bx<-datatable(data.frame( "Actual" = testd()$target,
+ #                         "Multiple Linear Regression" ,lmpred(),
+ #                          "Regression Tree",treepred(),
+  #                       "Random Forest", rfpred()))
+  #  return(bx)                    
+ # })
     
-  })
+ # output$databp<-renderPlot({ 
+ #   req(datab())
+ #   bb <- ggplot(datab()) + geom_boxplot()
+ #   
+ #   bb                     
+  #
+  #  })
   
-  
+   
+    
+    
   
   
 }   
