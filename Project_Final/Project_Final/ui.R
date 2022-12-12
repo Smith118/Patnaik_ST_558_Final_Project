@@ -141,12 +141,35 @@ dashboardPage(skin="black",
                                        conditionalPanel(
                                          condition = "input.cat == '2'",
                                          selectInput("catvar", "Select Variable for Category",
-                                                     c("day","week" ,"target"),selected='week')),
+                                                     c("day","week"),selected='week')),
                                        br(),
                                        submitButton("Update View", icon("refresh")),
                                        plotOutput("plot1")
                                    )
+                            ),
+                            column(6,
+                                   box(width=10,
+                                       solidHeader=TRUE,           
+                                       selectInput("act", "Select Type of statistic",
+                                                   choices=list("mean"=1,"sum"=2,"SD"=3 ,selected = 1)) ,
+                                       radioButtons("filter", label = h5("Plot Category wise?",style = "font-weight:bold"),
+                                                    choices = list("No" = 1, 
+                                                                   "Yes" = 2),selected=1),
+                                       h4("Select Category variable for grouping"),
+                                       conditionalPanel(
+                                         condition = "input.act == '2'",
+                                         selectInput("var1", "Select Variable for Category",
+                                                     c("day","week"),selected='week'),multiple=TRUE),
+                                       submitButton("Update View", icon("refresh")),
+                                       dataTableOutput('summ')
+                                       
+                                       )
+                              
+                              
+                              
                             )
+                            
+                            
                           )),
                           
                           tabItem(tabName = "modelling",

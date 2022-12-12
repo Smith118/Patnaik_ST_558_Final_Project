@@ -23,10 +23,10 @@ names(df1) <- c('week', 'day', 'non_urgent', 'urgent', 'typeA', 'typeB',
                 'typeC', 'fiscal', 'traffic', 'banking1', 'banking2',
                 'banking3', 'target')
 
-df1<-df1 %>% mutate(day1=as.factor(day))
-df1<-df1 %>% mutate(week1=as.factor(week))
-m<-mean(df1$target)
-df1<-df1%>%mutate(target1=as.factor(ifelse(target<m,0,1)))
+#df1<-df1 %>% mutate(day1=as.factor(day))
+#df1<-df1 %>% mutate(week1=as.factor(week))
+#m<-mean(df1$target)
+#df1<-df1%>%mutate(target1=as.factor(ifelse(target<m,0,1)))
 
 
 para <- 1:ncol(df1)
@@ -39,36 +39,12 @@ names(para) <- names(df1)
   
 #}
 
-all_tables<-function(df1,act,filter,varcount,var1)
-{ 
+#all_tables<-function(df1,act,filter,varcount,var1)
+#{ 
   
-  df_1<-df1%>%select(- c(target1,week1,day1))
-  if (act==1) {
-    if(filter==1) #mean
-    {   
-      df_summary <-sapply(df_1,mean, 2)
-    }
-    else if(filter==2)
-    {
-      df_summary<-df_1%>% group_by((get(var1))) %>% summarise_all(mean)
-      
-    }
-  }
   
-  if (act==2) {
-    if(filter==1) #totals
-    {   
-      df_summary <-sapply(df_1,sum, 2)
-    }
-    else if(filter==2)
-    {
-      
-      df_summary<-df_1%>% group_by((get(var1))) %>% summarise_all(sum)
-      
-    }}
-  
-  return(data.frame(df_summary))
-}  
+ # return(data.frame(df_summary))
+#}  
 
 #all_plots1<-function(df1,ply,ins,outs,cat,catvar)
 #{
@@ -121,6 +97,52 @@ shinyServer <-function(input,output,session) {
   return(ss)  
   }) 
   
+  
+#output$summ<-renderDataTable ({
+#  sc<-datatable( 
+#  if (input$act==1) {
+ #   if(input$filter==1) 
+ #   {   
+ #   }
+ #   else if(input$filter==2)
+ #   {
+ #     v<-as.names(input$var1)
+ #   df1<-df1%>% group_by(v) %>% summarise_all(mean)
+  #  }
+ # }
+ # else if (input$act==2) {
+ #   if(input$filter==1) #totals
+ #   {   
+ #     summary(df1)
+ #   }
+  #  else if(input$filter==2)
+ #   {
+ #     v<-!as.names(input$var1)
+  #    df1<-df1%>% group_by(v) %>% summarise_all(sum)
+      
+ #   }}
+  
+#  else if (input$act==3) {
+    
+    
+ #   if(input$filter==1) #totals
+ #   {   
+  #    summary(df1)
+ #   }
+ #   else if(input$filter==2)
+  #  {
+ #      v<-as.names(input$var1)
+ #     df1<-df1%>% group_by(v) %>% summarise_all(sd)
+      
+  #   }}
+ #   )  
+# 3return(sc) 
+#})  
+  
+  
+  
+  
+   
   output$plot1 <- renderPlot({ 
     
     #req(df1,input$ply,input$ins,input$outs,input$cat,input$catvar)
@@ -162,10 +184,14 @@ shinyServer <-function(input,output,session) {
   
   
   
+  df2<-reactive({df1})
   
   
-  
-  
+  traind<-reactive({sample_frac(df2(), size=input$prop, replace=FALSE)
+    })
+  testd<-reactive({anti_join(df2(), traind())
+    })
+ 
   
   
   
@@ -182,11 +208,7 @@ shinyServer <-function(input,output,session) {
   #test<- df2()[-inTrain()]
   #            })  
   
-  df2<-reactive({df1})   
-  
-  
-  
-  
+
   
   
   
@@ -207,12 +229,12 @@ shinyServer <-function(input,output,session) {
   ### RGERESSION FITS
   lm_model <- reactive({
     output$value <- renderPrint({ input$columns })  
-    req(df2(),input$columns,df2()$target)
-    x <- as.numeric(df2()[[as.name(input$columns)]])
-    y <- as.numeric(df2()$target)
+    req(traind(),input$columns,traind()$target)
+    x <- as.numeric(traind()[[as.name(input$columns)]])
+    y <- as.numeric(traind()$target)
     f <- paste0('target', " ~ ", paste0(input$columns, collapse = " + "))
     f <- as.formula(f)
-    model <- lm(f, data = df2(), na.action=na.exclude)
+    model <- lm(f, data = traind(), na.action=na.exclude)
     return(model)
   })
   
@@ -232,13 +254,13 @@ shinyServer <-function(input,output,session) {
   
   
   treeFit <- reactive({
-    req(df2(),input$columns,input$mins,input$dep,df2()$target)
-    x <- as.numeric(df2()[[as.name(input$columns)]])
-    y <- as.numeric(df2()$target)
+    req(traind(),input$columns,input$mins,input$dep,traind()$target)
+    x <- as.numeric(traind()[[as.name(input$columns)]])
+    y <- as.numeric(traind()$target)
     f <- paste0('target', " ~ ", paste0(input$columns, collapse = " + " ))
     f <- as.formula(f)
     treefit <- rpart(
-      f, data=df2(), 
+      f, data=traind(), 
       control = list(minsplit = input$mins, maxdepth = input$dep, cp = input$cp)
     )
     #control <- trainControl(method="cv", number=input$cvt)
@@ -265,14 +287,14 @@ shinyServer <-function(input,output,session) {
   
   
   rforest <- reactive({
-    req(df2(),input$columns,input$trym,input$cvn,input$tn,df2()$target)
-    x <- as.numeric(df2()[[as.name(input$columns)]])
-    y <- as.numeric(df2()$target)
+    req(traind(),input$columns,input$trym,input$cvn,input$tn,traind()$target)
+    x <- as.numeric(traind()[[as.name(input$columns)]])
+    y <- as.numeric(traind()$target)
     f <- paste0('target', " ~ ", paste0(input$columns, collapse = " + " ))
     f <- as.formula(f)
     control <- trainControl(method="cv", number=input$cvn,returnResamp="all")
     tunegrid <- expand.grid(.mtry=c(1:input$trym))
-    rf <- train(f, data=df2(), method="rf", metric="RMSE", 
+    rf <- train(f, data=traind(), method="rf", metric="RMSE", 
                 tuneGrid=tunegrid, ntree = input$tn, trControl=control)
     # rf<-randomForest(f,
     #             data=df2(), 
@@ -302,10 +324,10 @@ shinyServer <-function(input,output,session) {
   
   ## Predicitin Part 
   lmpred<-reactive({
-    req(df2(),input$columns,'target')
-    x <- as.numeric(df2()[[as.name(input$columns)]])
-    y <- as.numeric(df2()$target)
-    predict(lm_model(), newdata = df2())
+    req(testd(),input$columns,'target')
+    x <- as.numeric(testd()[[as.name(input$columns)]])
+    y <- as.numeric(testd()$target)
+    predict(lm_model(), newdata = testd())
     
   }) 
   
@@ -315,10 +337,10 @@ shinyServer <-function(input,output,session) {
   })
   
   treepred<-reactive({
-    req(df2(),input$columns,'target')
-    x <- as.numeric(df2()[[as.name(input$columns)]])
-    y <- as.numeric(df2()$target)
-    predict(treeFit(), newdata = df2())
+    req(testd(),input$columns,'target')
+    x <- as.numeric(testd()[[as.name(input$columns)]])
+    y <- as.numeric(testd()$target)
+    predict(treeFit(), newdata = testd())
     
   }) 
   
@@ -329,10 +351,10 @@ shinyServer <-function(input,output,session) {
   
   
   rfpred<-reactive({
-    req(df2(),input$columns,'target')
-    x <- as.numeric(df2()[[as.name(input$columns)]])
-    y <- as.numeric(df2()$target)
-    predict(rforest(), newdata = df2())
+    req(testd(),input$columns,'target')
+    x <- as.numeric(testd()[[as.name(input$columns)]])
+    y <- as.numeric(testd()$target)
+    predict(rforest(), newdata = testd())
     
   }) 
   
@@ -343,10 +365,10 @@ shinyServer <-function(input,output,session) {
   })
   
   output$fitrmse<-renderDataTable({
-    req(lmpred(),treepred(),rfpred(),df2()$target) 
-    datatable(data.frame("Multiple Reg "=sqrt(sum((lmpred()- df2()$target)^2)/length(lmpred())),
-                         "Regression Tree "=sqrt(sum((treepred()- df2()$target)^2)/length(lmpred())),
-                         "Random Forest "=RMSE(rfpred(), df2()$target)))
+    req(lmpred(),treepred(),rfpred(),testd()$target) 
+    datatable(data.frame("Multiple Reg "=RMSE(lmpred(), testd()$target),
+                         "Regression Tree "=RMSE(treepred(), testd()$target),
+                         "Random Forest "=RMSE(rfpred(), testd()$target)))
     
   })
   
