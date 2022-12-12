@@ -15,7 +15,6 @@ library(shinyr)
 library(rpart)
 library(randomForest)
 library(Metrics)
-library(ggcorrplot)
 library(GGally)
 # PRIOR WORKS , DATA DOWNLOAD AND FUNCTIONS
 
@@ -24,35 +23,10 @@ df1 <-read_delim("Daily_Demand_Forecasting_Orders.csv",delim=";",
 names(df1) <- c('week', 'day', 'non_urgent', 'urgent', 'typeA', 'typeB', 
                 'typeC', 'fiscal', 'traffic', 'banking1', 'banking2',
                 'banking3', 'target')
-df1<-na.omit(df1)
-#df1<-df1 %>% mutate(day1=as.factor(day))
-#df1<-df1 %>% mutate(week1=as.factor(week))
-#m<-mean(df1$target)
-#df1<-df1%>%mutate(target1=as.factor(ifelse(target<m,0,1)))
 
 
-para <- 1:ncol(df1)
-names(para) <- names(df1)
-
-#df_see_data<-function(df1,
-#     Criteria,nums1=0,nums2=0)
-#{
 
 
-#}
-
-#all_tables<-function(df1,act,filter,varcount,var1)
-#{ 
-
-
-# return(data.frame(df_summary))
-#}  
-
-#all_plots1<-function(df1,ply,ins,outs,cat,catvar)
-#{
-
-
-#}
 
 
 shinyServer <-function(input,output,session) {
@@ -61,7 +35,7 @@ shinyServer <-function(input,output,session) {
     return(list(src = "pics.PNG",contentType = "image/png",alt = "pic"))
   }, deleteFile = FALSE) 
   
-
+  
   
   
   
@@ -115,7 +89,7 @@ shinyServer <-function(input,output,session) {
       if (input$act==1) {
         if(input$filter==1) 
         { 
-          df1%>% group_by(input$var1) %>% summarise_all(mean)
+          df1%>% summarise_all(mean)
         }
         else if(input$filter==2)
         {
@@ -148,7 +122,7 @@ shinyServer <-function(input,output,session) {
         }}
       
       else if (input$act==4) {
-       
+        
         if(input$filter==1) #sd
         {   
           summary(df1)
@@ -232,44 +206,7 @@ shinyServer <-function(input,output,session) {
   
   
   
-  
-
-  
-  
-  
-  
-  
-  
-  #trainindex<-reactive ({
-  # sample <- sample.split(dfr()$target, SplitRatio = input$prop)
-  # dtrain  <- dfr()[sample == TRUE]
-  # dtest   <-dfr()[sample == FALSE]
-  # }) 
-  
-  #inTrain <- reactive({caret::createDataPartition(df2()$target, p = input$prop, list = FALSE) 
-  #train <- df2()[inTrain()]
-  #test<- df2()[-inTrain()]
-  #            })  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  img(src="pics.png", align = "right",height='250px',width='500px')
-  
-  
-  
-  
-  ### RGERESSION FITS
+  ### REERESSION FITS
   
   
   df2<-reactive({df1})
@@ -318,15 +255,7 @@ shinyServer <-function(input,output,session) {
       f, data=traind(), 
       control = list(minsplit = input$mins, maxdepth = input$dep, cp = input$cp)
     )
-    #control <- trainControl(method="cv", number=input$cvt)
-    # treefit<-train(
-    # f, data=df2(),method = "rpart",
-    #  metric = "RMSE", 
-    #trControl = control,
-    #   minsplit = input$mins, 
-    # depth = input$dep, 
-    # cp = input$cp
-    #)
+    
     return(treefit)
   })
   
@@ -351,11 +280,7 @@ shinyServer <-function(input,output,session) {
     tunegrid <- expand.grid(.mtry=c(1:input$trym))
     rf <- train(f, data=traind(), method="rf", metric="RMSE", 
                 tuneGrid=tunegrid, ntree = input$tn, trControl=control)
-    # rf<-randomForest(f,
-    #             data=df2(), 
-    #            ntree=input$tn,
-    ##           importance=TRUE,
-    #           replace=TRUE)
+    
     return(rf)
     
   })
@@ -372,14 +297,53 @@ shinyServer <-function(input,output,session) {
   })
   
   
-  # output$resultvimp <- renderPlot({
-  # req(rforest())
-  #varImpPlot(rforest(),type=2,main="Random Forest Variable importance")
-  #})
+  output$resultvimp <- renderText({
+    req(rforest())
+    varimp<-varImp(rforest(), scale = FALSE)
+    varimp
+  })
   
-  ## Predicitin Part 
+  lmfitd<-reactive({
+    req(lm_model(),traind(),input$columns,'target')
+    x <- as.numeric(traind()[[as.name(input$columns)]])
+    y <- as.numeric(traind()$target)
+    predict(lm_model(), newdata = testd())
+    
+  }) 
+  
+  treefitd<-reactive({
+    req(treeFit(),traind(),input$columns,'target')
+    x <- as.numeric(traind()[[as.name(input$columns)]])
+    y <- as.numeric(traind()$target)
+    predict(treeFit(), newdata = testd())
+    
+  }) 
+  
+  rffitd<-reactive({
+    req(rforest(),traind(),input$columns,'target')
+    x <- as.numeric(traind()[[as.name(input$columns)]])
+    y <- as.numeric(traind()$target)
+    predict(rforest(), newdata = testd())
+    
+  }) 
+  
+  output$infitrmse<-renderDataTable({
+    req(lmfitd(),traind()$target,treefitd(),rffitd()) 
+    datatable(data.frame("RMSE",
+                         "Multiple Reg "=RMSE(lmfitd(), traind()$target),
+                         "Regression Tree "=RMSE(treefitd(), traind()$target),
+                         "Random Forest "=RMSE(rffitd(), traind()$target)
+    ))
+    
+  })
+  
+  
+  
+  
+  
+  ## Prediction Part 
   lmpred<-reactive({
-    req(testd(),input$columns,'target')
+    req(lm_model(),testd(),input$columns,'target')
     x <- as.numeric(testd()[[as.name(input$columns)]])
     y <- as.numeric(testd()$target)
     predict(lm_model(), newdata = testd())
@@ -392,7 +356,7 @@ shinyServer <-function(input,output,session) {
   })
   
   treepred<-reactive({
-    req(testd(),input$columns,'target')
+    req(treeFit(),testd(),input$columns,'target')
     x <- as.numeric(testd()[[as.name(input$columns)]])
     y <- as.numeric(testd()$target)
     predict(treeFit(), newdata = testd())
@@ -406,7 +370,7 @@ shinyServer <-function(input,output,session) {
   
   
   rfpred<-reactive({
-    req(testd(),input$columns,'target')
+    req(rforest(),testd(),input$columns,'target')
     x <- as.numeric(testd()[[as.name(input$columns)]])
     y <- as.numeric(testd()$target)
     predict(rforest(), newdata = testd())
@@ -421,7 +385,7 @@ shinyServer <-function(input,output,session) {
   
   output$fitrmse<-renderDataTable({
     req(lmpred(),treepred(),rfpred(),testd()$target) 
-    datatable(data.frame("Metric","RMSE",
+    datatable(data.frame("RMSE",
                          "Multiple Reg "=RMSE(lmpred(), testd()$target),
                          "Regression Tree "=RMSE(treepred(), testd()$target),
                          "Random Forest "=RMSE(rfpred(), testd()$target)))
@@ -430,22 +394,16 @@ shinyServer <-function(input,output,session) {
   
   
   
-  # output$datab<-renderDataTable({
-  #   req(testd,l,pred(),treepred(),rfpred())
-  #   bx<-datatable(data.frame( "Actual" = testd()$target,
-  #                         "Multiple Linear Regression" ,lmpred(),
-  #                          "Regression Tree",treepred(),
-  #                       "Random Forest", rfpred()))
-  #  return(bx)                    
-  # })
-  
-  # output$databp<-renderPlot({ 
-  #   req(datab())
-  #   bb <- ggplot(datab()) + geom_boxplot()
-  #   
-  #   bb                     
-  #
-  #  })
+  output$databox<-renderDataTable({ 
+    
+    req(testd()$target,lmpred(),treepred(),rfpred())
+    datgg<-datatable(data.frame( "Actual" = testd()$target,
+                                 "Multiple Linear Regression" ,lmpred(),
+                                 "Regression Tree",treepred(),
+                                 "Random Forest", rfpred()),options=list(scrollX=T))
+    
+    
+  })
   
   
   

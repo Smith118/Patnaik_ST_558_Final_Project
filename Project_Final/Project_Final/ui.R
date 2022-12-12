@@ -18,11 +18,9 @@ library(shinyr)
 library(rpart)
 library(randomForest)
 library(Metrics)
-library(ggcorrplot)
 library(GGally)
 
-para <- 1:ncol(df1)
-names(para) <- names(df1)
+
 
 
 dashboardPage(skin="black",
@@ -64,13 +62,15 @@ dashboardPage(skin="black",
                                                     href="https://archive.ics.uci.edu/ml/datasets/Daily+Demand+Forecasting+Orders")
                                          )),
                                        br(),
-                                       h4("The App has 3 main tabs."),
+                                       h4("The App has 4 main tabs."),
                                        h4("The First tab shows the information about the Data. Here dataframe can be explored with
                                        its columns and rows. The type of data can be seen.
                                        and select functions can be performed like subsetting the data based on row and columns. 
                                        The User can make selections on the inputs and removed with **backspace key**.
                                        The selections are equipped with submit/update view , more chioces will be seen on selecting inputs to enhance
                                        usbility.
+                                       The second tab is data tab that can be used to view the data and dubset rows/column based on requirement,
+                                       Please note this can do subset from 1st row or  1st column only.The data and its subset can be downloaded to excel /csv etc.
                                        The next tab is Data Exploration tab. This can be used to do basic summary statiscs like sum and 
                                        mean on the dataset based on categories (if needed). And is equipped to make select plots.
                                        The thid tab is the Modelling tab. This tab is further divided into 4 sections. 1st 
@@ -79,9 +79,12 @@ dashboardPage(skin="black",
                                        The results of model fit can be found at the Model Fitting tab.
                                        The next tab is the prediction result tab which shows the sumary statistics for the prediction made with test data.
                                        The comparison metric used here is : RMSE for the fit and prediction comparison.",align="justified"),
-                                       h4 ( "The model fit and prediction output are stated through their summaries. And parameters like C results, Variable 
-                                       importance and RMSe , MSE etc can be referred from the summary results directly. "
-                                        
+                                       h4 ( "The model fit and prediction output are stated through their summaries. And parameters like results, Variable 
+                                       importance and RMSE , MSE etc can be referred from the summary results directly. The Multiple lInear Regression model
+                                        can be used to perform linear regression with one variable as well as user can choose predictors. The Decision tree uses 
+                                            'rpart' package which has cross validation inbuilt. Random forest model uses caret package and the allows user to select
+                                            numbers for cross validation."
+                                            
                                        )
                                        
                                    )
@@ -188,8 +191,8 @@ dashboardPage(skin="black",
                                                fluidRow(
                                                  h2("About Models"),
                                                  box(width=10,
-                                                
-                                                 h4("The Modelling tab has been created to test three types of Regressions- Multiple LinearRegression Model, 
+                                                     
+                                                     h4("The Modelling tab has been created to test three types of Regressions- Multiple LinearRegression Model, 
                                                     Regression Tree and a Random Forest Model. The Data has 12 set of predictos and 1 response variable called 
                                                     'target' which is the target orders to be fulfilled. The set of predictors has been kept open for the user
                                                     to choose , however the target variable is fixed to as the response variable as the data does not have any 
@@ -202,39 +205,39 @@ dashboardPage(skin="black",
                                                     The user is also allowed to choose the percentage for train and test set, this allows for flexibility in 
                                                     deciding the split based on requirement.
                                                     "),
-                                                 column(12,
-                                                 h3("Multiple Linear Regression"),
-                                                 box(
-                                                 h4(" Multiple Linear Regression is extension to the Linear Regression that we see every day.
+                                                     column(12,
+                                                            h3("Multiple Linear Regression"),
+                                                            box(
+                                                              h4(" Multiple Linear Regression is extension to the Linear Regression that we see every day.
                                                  This is formulated as: 
                                                  "),
-                                                 h4("\\(Y\\)=\\(\\beta\\)0 + \\(\\beta\\)1 * \\(X\\)1 + \\(\\beta\\)2 * \\(X\\)2......"),
-                                                 h4(", where Y is the predicted reponsese value for the linear model with regression coefficients 
+                                                              h4("\\(Y\\)=\\(\\beta\\)0 + \\(\\beta\\)1 * \\(X\\)1 + \\(\\beta\\)2 * \\(X\\)2......"),
+                                                              h4(", where Y is the predicted reponsese value for the linear model with regression coefficients 
                                                      in X with their slopes and intercept (\\beta\\)0 .Regression works with following assumptions:"),
-                                                  h4("1.Response is linearly related to the combination or transformations of predicotr variables"),
-                                                  h4("2.The residuals follow a normal distribution"),
-                                                  h4("3.Residuals have uniform variance"),
-                                                 h4("MLM models are easy to implement and work perfectly when the predictors are known to have 
+                                                              h4("1.Response is linearly related to the combination or transformations of predicotr variables"),
+                                                              h4("2.The residuals follow a normal distribution"),
+                                                              h4("3.Residuals have uniform variance"),
+                                                              h4("MLM models are easy to implement and work perfectly when the predictors are known to have 
                                                     linear relationship with response variables. However, they are prone to noise and over fitting 
                                                     and may not perform well when the predictors are themselves highly correlated.
                                                     "),
-                                                 ),
-                                                 box(
-                                                 h3("Regression Tree Model"),
-                                                 h4("Regression trees are decision trees in which theresponse values \\(Y\\) can take continuous values 
+                                                            ),
+                                                            box(
+                                                              h3("Regression Tree Model"),
+                                                              h4("Regression trees are decision trees in which theresponse values \\(Y\\) can take continuous values 
                                                  instead of class labels in leaves. Regression trees are used to explain the decisions, 
                                                  and identify possible events tthat can occur, and see best outcome thorugh required metric. The 
                                                  advantages of Regression trees is that they are capacle in explaining
                                                  which attributes are used and how the attributes are used to obtain the outcome.The disdvantages
                                                  are that it is prone to overfitting and may get very complex.
                                                  ")
-                                                 
-                                                 
-                                                 ),
-                                                 
-                                                 box(
-                                                   h3("Random Forest"),
-                                                   h4("Random Forest combins multiple decision trees to make a forest.
+                                                              
+                                                              
+                                                            ),
+                                                            
+                                                            box(
+                                                              h3("Random Forest"),
+                                                              h4("Random Forest combins multiple decision trees to make a forest.
                                                    Random Forest model concept used relation that,  multiple uncorrelated models 
                                                    cab perform much better togther than they do alone.
                                                    Each tree gives a classification , and then the  
@@ -244,15 +247,15 @@ dashboardPage(skin="black",
                                                    but has disadvatnge that it still may rlead to large complex models. 
                                                  
                                                  ")
-                                                   
-                                                   
-                                                 )
-                                                    )
-                                                ) )
+                                                              
+                                                              
+                                                            )
+                                                     )
+                                                 ) )
                                                
-                                               ),
+                                      ),
                                       
-                                    
+                                      
                                       
                                       tabPanel(title="Model fitting",
                                                fixedRow(div(style = "height:10px"),
@@ -262,7 +265,7 @@ dashboardPage(skin="black",
                                                                selectInput("columns", "Select Variable for X",
                                                                            c("week","day","non_urgent","urgent","typeA",
                                                                              "typeB","typeC","fiscal","traffic" ,"banking1",
-                                                                             "banking2" ,"banking3","target","day1","week1" ),multiple=TRUE)),
+                                                                             "banking2" ,"banking3" ),multiple=TRUE)),
                                                         column(4,
                                                                h4("Settings for Regression Tree:(note cv is inbuilt in 'rpart')"),
                                                                numericInput("mins", 'Select MinSplit',value=5,max=13, min=1,step=1),
@@ -278,41 +281,34 @@ dashboardPage(skin="black",
                                                                submitButton("Update View", icon("refresh")),
                                                                verbatimTextOutput("value"),
                                                                fixedRow(    
-                                                          column(12, 
-                                                                 box(width=12,
-                                                          dataTableOutput("infitrmse") ),     
-                                                                 column(4,
-                                                                        box(width=15,
-                                                                            #sliderInput(
-                                                                            # "prop",
-                                                                            # label = h3("Use this to get Train/Test Split %"),
-                                                                            # min = 0,
-                                                                            # step=0.1,
-                                                                            # max = 1,
-                                                                            #  value =0.75),
-                                                                            #textOutput('result'),
-                                                                            ##DT::dataTableOutput('dftable'),
-                                                                            h4("Multiple Linear Regression"),
-                                                                            plotOutput('resultlm'),
-                                                                            br(),
-                                                                            verbatimTextOutput('lmsummary')
-                                                                            )),
-                                                                 column(4,
-                                                                        box(width=15,
-                                                                            h4("Regression Tree"),
-                                                                            plotOutput('resulttree'),
-                                                                            br(),
-                                                                            verbatimTextOutput('rtreesummary')
-                                                                            )),
-                                                                 
-                                                                 column(4,
-                                                                        box(width=15,
-                                                                            h4("Random Forest"),
-                                                                            plotOutput('resultrf'),
-                                                                            br(),
-                                                                            verbatimTextOutput('rfsummary')
-                                                                            ))
-                                                               ))))),
+                                                                 column(12, 
+                                                                        box(width=12,
+                                                                            dataTableOutput("infitrmse")),     
+                                                                        column(4,
+                                                                               box(width=15,
+                                                                                   
+                                                                                   h4("Multiple Linear Regression"),
+                                                                                   plotOutput('resultlm'),
+                                                                                   br(),
+                                                                                   verbatimTextOutput('lmsummary')
+                                                                               )),
+                                                                        column(4,
+                                                                               box(width=15,
+                                                                                   h4("Regression Tree"),
+                                                                                   plotOutput('resulttree'),
+                                                                                   br(),
+                                                                                   verbatimTextOutput('rtreesummary')
+                                                                               )),
+                                                                        
+                                                                        column(4,
+                                                                               box(width=15,
+                                                                                   h4("Random Forest"),
+                                                                                   verbatimTextOutput("varimp"),
+                                                                                   plotOutput('resultrf'),
+                                                                                   br(),
+                                                                                   verbatimTextOutput('rfsummary')
+                                                                               ))
+                                                                 ))))),
                                       tabPanel(title="Predictions",
                                                fluidRow( 
                                                  h3("Test Prediction Results")),
@@ -342,20 +338,19 @@ dashboardPage(skin="black",
                                                br(), 
                                                br(),
                                                fluidRow(
-                                                 box(width=5,height=10,
-                                                     column(6,
-                                                            h3("Test Prediction Comparisons RMSE"),
-                                                            dataTableOutput("fitrmse")
-                                                            
-                                                            
-                                                     )#,
-                                                     #column(6,
-                                                     #       h3("Test Prediction Comparisons Data"),
-                                                     #        
-                                                     #      plotOutput("databp") 
-                                                     
-                                                     #)
-                                                     
+                                                 column(12,
+                                                        box(width=15,height=10,
+                                                            column(6,
+                                                                   h3("Test Prediction Comparisons RMSE"),
+                                                                   dataTableOutput("fitrmse")
+                                                                   
+                                                                   
+                                                            ),
+                                                            column(6,
+                                                                   h3("Test Prediction Comparisons Data"),
+                                                                   dataTableOutput("databox") )
+                                                        )
+                                                        
                                                  )
                                                  
                                                  
