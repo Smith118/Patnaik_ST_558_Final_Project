@@ -35,17 +35,17 @@ para <- 1:ncol(df1)
 names(para) <- names(df1)
 
 #df_see_data<-function(df1,
-                #     Criteria,nums1=0,nums2=0)
+#     Criteria,nums1=0,nums2=0)
 #{
- 
-  
+
+
 #}
 
 #all_tables<-function(df1,act,filter,varcount,var1)
 #{ 
-  
-  
- # return(data.frame(df_summary))
+
+
+# return(data.frame(df_summary))
 #}  
 
 #all_plots1<-function(df1,ply,ins,outs,cat,catvar)
@@ -57,8 +57,17 @@ names(para) <- names(df1)
 
 shinyServer <-function(input,output,session) {
   
+  output$pic <- renderImage({
+    return(list(src = "pics.PNG",contentType = "image/png",alt = "pic"))
+  }, deleteFile = FALSE) 
+  
+
+  
+  
+  
+  
   dff <- reactive({
-     df1})
+    df1})
   
   output$tab<-renderDataTable ({
     ss<-datatable(
@@ -68,151 +77,164 @@ shinyServer <-function(input,output,session) {
       
       else if (input$Criteria==2 )
       {
-      
-      df1[1:input$nums1, ] 
+        
+        df1[1:input$nums1, ] 
       }
       else if (input$Criteria==3 ) 
       {
-    
+        
         df1%>%subset(select=1:input$nums2)
       }
       else if (input$Criteria==4 ) 
       {
-      f<-df1[1:input$nums1, ] 
-      f%>%subset(select=1:input$nums2)
+        f<-df1[1:input$nums1, ] 
+        f%>%subset(select=1:input$nums2)
       },
       extensions = 'Buttons',
-              options = list(
-                paging = TRUE,
-                searching = TRUE,
-                fixedColumns = TRUE,
-                autoWidth = FALSE,
-                ordering = TRUE,
-                dom = 'Bfrtip',
-                scrollX = T,
-                scrollY = T, 
-                #buttons = c('copy', 'csv', 'excel','pdf'),
-                buttons=list(list(extend = "excel", text = '<span class="glyphicon glyphicon-th"></span>'), 
-                             list(extend = "csv", text = '<span class="glyphicon glyphicon-download-alt"></span>'))
-              ),
-    class = "display"
+      options = list(
+        paging = TRUE,
+        searching = TRUE,
+        fixedColumns = TRUE,
+        autoWidth = FALSE,
+        ordering = TRUE,
+        dom = 'Bfrtip',
+        scrollX = T,
+        scrollY = T, 
+        #buttons = c('copy', 'csv', 'excel','pdf'),
+        buttons=list(list(extend = "excel", text = '<span class="glyphicon glyphicon-th"></span>'), 
+                     list(extend = "csv", text = '<span class="glyphicon glyphicon-download-alt"></span>'))
+      ),
+      class = "display"
     )
-  return(ss)  
+    return(ss)  
   }) 
   
   
- output$summ<-renderDataTable ({
-  sc<-datatable( 
-  if (input$act==1) {
-    if(input$filter==1) 
-    {   
-    }
-    else if(input$filter==2)
-    {
-      df1%>% group_by(input$var1) %>% summarise_all(mean)
-    }
-  }
- else if (input$act==2) {
-    if(input$filter==1) #totals
-    {   
-      summary(df1)
-    }
-    else if(input$filter==2)
-    {
-     
-     df1%>% group_by(input$var1) %>% summarise_all(mean)
+  output$summ<-renderDataTable ({
+    sc<-datatable( 
+      if (input$act==1) {
+        if(input$filter==1) 
+        { 
+          df1%>% group_by(input$var1) %>% summarise_all(mean)
+        }
+        else if(input$filter==2)
+        {
+          df1%>% group_by(input$var1) %>% summarise_all(mean)
+        }
+      }
+      else if (input$act==2) {
+        if(input$filter==1) #totals
+        {   
+          df1%>%  summarise_all(sum)
+        }
+        else if(input$filter==2)
+        {
+          
+          df1%>% group_by(input$var1) %>% summarise_all(sum)
+          
+        }}
       
-    }}
-  
-  else if (input$act==3) {
-    
-    if(input$filter==1) #totals
-    {   
-      summary(df1)
-    }
-    else if(input$filter==2)
-    {
+      else if (input$act==3) {
+        
+        if(input$filter==1) #sd
+        {   
+          df1%>% summarise_all(sd)
+        }
+        else if(input$filter==2)
+        {
+          
+          df1%>% group_by(input$var1) %>% summarise_all(sd)
+          
+        }}
       
-       df1%>% group_by(input$var1) %>% summarise_all(sd)
+      else if (input$act==4) {
+       
+        if(input$filter==1) #sd
+        {   
+          summary(df1)
+        }
+        else if(input$filter==2)
+        {
+          
+          df1%>% group_by(input$var1) %>% summary(df1)
+          
+        } 
+        
+        
+        
+      }
       
-     }},options = list(scrollY = '300px') 
+      ,options = list(scrollY = '300px') 
     ) 
- return(sc) 
-})  
+    return(sc) 
+  })  
   
   output$plot1 <- renderPlot({ 
     
     #req(df1,input$ply,input$ins,input$outs,input$cat,input$catvar)
     g<- if (input$ply==1) 
-       #scatter
-          { 
-            if (input$cat==1) 
-          { 
-              ggplot(df1,aes_string(x =df1[[input$ins]],
-                                  y = df1[[input$outs]]))+
-              geom_point(alpha=0.5)+  geom_jitter()
-          }
-            else if(input$cat==2)
-            {
-              ggplot(df1,aes_string(x =df1[[input$ins]],
-                                    y = df1[[input$outs]],color=df1[[input$catvar]]))+
-                geom_point(alpha=0.5)+  geom_jitter() 
-            }
-          }
-          
-        
+      #scatter
+    { 
+      if (input$cat==1) 
+      { 
+        ggplot(df1,aes_string(x =df1[[input$ins]],
+                              y = df1[[input$outs]]))+
+          geom_point(alpha=0.5)+  geom_jitter()
+      }
+      else if(input$cat==2)
+      {
+        ggplot(df1,aes_string(x =df1[[input$ins]],
+                              y = df1[[input$outs]],color=df1[[input$catvar]]))+
+          geom_point(alpha=0.5)+  geom_jitter() 
+      }
+    }
+    
+    
     else if(input$ply==2) #bar
-            { 
-        if (input$cat==1) 
+    { 
+      if (input$cat==1) 
       {  
         ggplot(df1,aes_string(x =df1[[input$ins]],
                               y = df1[[input$outs]]))+
           geom_bar(position='dodge',stat='identity')
       }
-        else if(input$cat==2)
-        {
-          ggplot(df1,aes_string(x =df1[[input$ins]],
-                                y = df1[[input$outs]],color=df1[[input$catvar]]))+
-            geom_bar(position='dodge',stat='identity') 
-        }
+      else if(input$cat==2)
+      {
+        ggplot(df1,aes_string(x =df1[[input$ins]],
+                              y = df1[[input$outs]],color=df1[[input$catvar]]))+
+          geom_bar(position='dodge',stat='identity') 
       }
+    }
     else if(input$ply==3) #box
       
-      { 
-       if (input$cat==1) 
-        {  
+    { 
+      if (input$cat==1) 
+      {  
         ggplot(df1,aes_string(x =df1[[input$ins]],
                               y = df1[[input$outs]]))+
           geom_boxplot()
       }
-        else if(input$cat==2)
-        {
-          ggplot(df1,aes_string(x =df1[[input$ins]],
-                                y = df1[[input$outs]],color=df1[[input$catvar]]))+
-            geom_boxplot() 
-        }
+      else if(input$cat==2)
+      {
+        ggplot(df1,aes_string(x =df1[[input$ins]],
+                              y = df1[[input$outs]],color=df1[[input$catvar]]))+
+          geom_boxplot() 
       }
+    }
     
     else if(input$ply==4){ #hist
       ggpairs(df1)
-      }
+    }
     
     g
     
-    })
+  })
   
   
   
   
+
   
-  df2<-reactive({df1})
-  
-  
-  traind<-reactive({sample_frac(df2(), size=input$prop, replace=FALSE)
-    })
-  testd<-reactive({anti_join(df2(), traind())
-    })
- 
   
   
   
@@ -229,7 +251,6 @@ shinyServer <-function(input,output,session) {
   #test<- df2()[-inTrain()]
   #            })  
   
-
   
   
   
@@ -242,12 +263,25 @@ shinyServer <-function(input,output,session) {
   
   
   
-  img(src='pics.png', align = "right")
+  
+  img(src="pics.png", align = "right",height='250px',width='500px')
   
   
   
   
   ### RGERESSION FITS
+  
+  
+  df2<-reactive({df1})
+  
+  
+  traind<-reactive({sample_frac(df2(), size=input$prop, replace=FALSE)
+  })
+  testd<-reactive({anti_join(df2(), traind())
+  })
+  
+  
+  
   lm_model <- reactive({
     output$value <- renderPrint({ input$columns })  
     req(traind(),input$columns,traind()$target)
@@ -388,34 +422,34 @@ shinyServer <-function(input,output,session) {
   output$fitrmse<-renderDataTable({
     req(lmpred(),treepred(),rfpred(),testd()$target) 
     datatable(data.frame("Metric","RMSE",
-                          "Multiple Reg "=RMSE(lmpred(), testd()$target),
+                         "Multiple Reg "=RMSE(lmpred(), testd()$target),
                          "Regression Tree "=RMSE(treepred(), testd()$target),
                          "Random Forest "=RMSE(rfpred(), testd()$target)))
-   
-     })
+    
+  })
   
   
   
- # output$datab<-renderDataTable({
- #   req(testd,l,pred(),treepred(),rfpred())
- #   bx<-datatable(data.frame( "Actual" = testd()$target,
- #                         "Multiple Linear Regression" ,lmpred(),
- #                          "Regression Tree",treepred(),
+  # output$datab<-renderDataTable({
+  #   req(testd,l,pred(),treepred(),rfpred())
+  #   bx<-datatable(data.frame( "Actual" = testd()$target,
+  #                         "Multiple Linear Regression" ,lmpred(),
+  #                          "Regression Tree",treepred(),
   #                       "Random Forest", rfpred()))
   #  return(bx)                    
- # })
-    
- # output$databp<-renderPlot({ 
- #   req(datab())
- #   bb <- ggplot(datab()) + geom_boxplot()
- #   
- #   bb                     
+  # })
+  
+  # output$databp<-renderPlot({ 
+  #   req(datab())
+  #   bb <- ggplot(datab()) + geom_boxplot()
+  #   
+  #   bb                     
   #
   #  })
   
-   
-    
-    
+  
+  
+  
   
   
 }   
